@@ -1,6 +1,8 @@
 package com.pocxevi.usercenter.service;
+import java.security.MessageDigest;
 import java.util.Date;
 
+import com.aliyuncs.utils.Base64Helper;
 import com.pocxevi.usercenter.model.domain.User;
 
 import org.junit.jupiter.api.Assertions;
@@ -33,6 +35,36 @@ class UserServiceTest {
         boolean save = userService.save(user);
         System.out.println(user.getId());
         Assertions.assertTrue(save);
+        
+        
+    }
+    
+    @Test
+    void testMD5() {
+        String encodeStr = "";
+        String str = "aaaaa";
+        byte[] utfBytes = str.getBytes();
+        MessageDigest mdTemp;
+        try {
+            mdTemp = MessageDigest.getInstance("MD5");
+            mdTemp.update(utfBytes);
+            byte[] md5Bytes = mdTemp.digest();
+            Base64Helper b64Encoder = new Base64Helper();
+            encodeStr = b64Encoder.encode(md5Bytes);
+        } catch (Exception e) {
+            throw new Error("Failed to generate MD5 : " + e.getMessage());
+        }
+        System.out.println(encodeStr);
+    }
+
+    @Test
+    void userRegister() {
+        String userAccount = "dajiba";
+        String userPassword = "123456789";
+        String checkPassword = "123456789";
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+
+        Assertions.assertTrue(result > 0);
 
     }
 }
