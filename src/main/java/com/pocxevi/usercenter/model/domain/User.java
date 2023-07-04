@@ -1,10 +1,10 @@
 package com.pocxevi.usercenter.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 
@@ -42,7 +42,7 @@ public class User implements Serializable {
     /**
      * 密码
      */
-    private String password;
+    private String userPassword;
 
     /**
      * 电话
@@ -74,6 +74,11 @@ public class User implements Serializable {
      */
     @TableLogic
     private Integer isDelete;
+
+    /**
+     * 用户角色 -0代表普通用户 1代表管理员 
+     */
+    private Integer userRole;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

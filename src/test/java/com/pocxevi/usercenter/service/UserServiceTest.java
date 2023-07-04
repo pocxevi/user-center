@@ -24,7 +24,7 @@ class UserServiceTest {
         user.setUsername("pocxevi");
         user.setAvatarUrl("https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1cts0X.img?w=1920&h=1080&q=60&m=2&f=jpg");
         user.setGender(0);
-        user.setPassword("xxx");
+        user.setUserPassword("xxx");
         user.setPhone("123");
         user.setEmail("456");
         user.setUserStatus(0);
@@ -33,6 +33,7 @@ class UserServiceTest {
         user.setIsDelete(0);
 
         boolean save = userService.save(user);
+
         System.out.println(user.getId());
         Assertions.assertTrue(save);
         
