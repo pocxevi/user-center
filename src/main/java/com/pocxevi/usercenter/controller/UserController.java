@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.pocxevi.usercenter.constant.UserConstant.ADMIN_USERROLE;
 import static com.pocxevi.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -73,6 +74,19 @@ public class UserController {
 
     }
 
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (userObj == null) {
+            return null;
+        }
+        User currentUser = (User) userObj;
+        Long userId = currentUser.getId();
+        // TODO 校验用户是否合法
+        User user = userService.getById(userId);
+        return userService.getSafetyUser(user);
+    }
+
     /**
      * 用户查询
      *
@@ -109,7 +123,7 @@ public class UserController {
     }
 
     /**
-     * 权限判断
+     * 权限判断 是否为管理员
      * @param request
      * @return
      */
@@ -120,6 +134,6 @@ public class UserController {
 //            return false;
 //        }
 //        return true;
-        return user == null || user.getUserRole() != 1;
+        return user != null || user.getUserRole().equals(ADMIN_USERROLE);
     }
 }
