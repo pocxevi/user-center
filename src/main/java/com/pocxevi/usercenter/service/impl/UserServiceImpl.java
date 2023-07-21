@@ -3,6 +3,8 @@ import java.util.Date;
 import com.aliyuncs.utils.Base64Helper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pocxevi.usercenter.common.ErrorCode;
+import com.pocxevi.usercenter.exception.BusinessException;
 import com.pocxevi.usercenter.model.domain.User;
 import com.pocxevi.usercenter.service.UserService;
 import com.pocxevi.usercenter.mapper.UserMapper;
@@ -34,32 +36,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.先进行校验
         // 先进行判空
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码不能为空！");
         }
 
         // 账户长度不小于4位
         if (userAccount.length() < 4) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户长度不小于4位！");
         }
 
         // 密码长度不小于八位
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不小于八位！");
         }
 
-        // 密码中不包含的特殊字符正则表达式
-        String specialCharsRegex = "[`~!@#$%^&*()+=|{}':;',\\\\\\\\[\\\\\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        // 检查密码是否包含特殊字符
-        Pattern pattern = Pattern.compile(specialCharsRegex);
-        Matcher matcher = pattern.matcher(userAccount);
+        // 账户不能包含特殊字符
+        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         boolean result = matcher.find();
         if (result) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户不能包含特殊字符！");
         }
 
         // 两次密码输入相同
         if (!userPassword.equals(checkPassword)) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次密码输入不相同！");
         }
 
         // 账户不能重复
@@ -67,7 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         wrapper.eq("userAccount", userAccount);
         long count = this.count(wrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户已重复！");
         }
 
         // 2.密码进行加密
@@ -80,7 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         // 为了防止装箱错误(返回null值)
         if (!savedResult) {
-            return -1;
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "数据错误！");
         }
 
         return user.getId();
@@ -91,27 +91,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.先进行校验
         // 先进行判空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码不能为空！");
         }
 
         // 账户长度不小于4位
         if (userAccount.length() < 4) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户长度不能小于4位！");
         }
 
         // 密码长度不小于八位
         if (userPassword.length() < 8) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能小于八位！");
         }
 
-        // 密码中不包含的特殊字符正则表达式
-        String specialCharsRegex = "[`~!@#$%^&*()+=|{}':;',\\\\\\\\[\\\\\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        // 检查密码是否包含特殊字符
-        Pattern pattern = Pattern.compile(specialCharsRegex);
-        Matcher matcher = pattern.matcher(userAccount);
+        // 账户不能包含特殊字符
+        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         boolean result = matcher.find();
         if (result) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户不能包含特殊字符！");
         }
 
         // 2.登录：查询、返回
@@ -125,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 用户为空 (记录日志尽量用英文，不会出现乱码)
         if (user == null) {
             log.info("user login faild, userAccount can not match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在！");
         }
         // 3.用户信息脱敏
         User safetyUser = getSafetyUser(user);
@@ -134,10 +132,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return safetyUser;
     }
 
+    /**
+     * 用户信息脱敏
+     *
+     * @param user
+     * @return
+     */
     @Override
     public User getSafetyUser(User user) {
         if (user == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在！");
         }
         User safetyUser = new User();
         safetyUser.setId(user.getId());
@@ -152,6 +156,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUpdateTime(new Date());
         safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
+    }
+
+    /**
+     * 用户注销
+     *
+     * @param request
+     * @return
+     */
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        // 移除登录态
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return 1;
     }
 
     /**
@@ -177,12 +194,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return encodeStr;
     }
 
-    /**
-     * 用户信息脱敏
-     *
-     * @param user
-     * @return
-     */
+
 
 }
 
