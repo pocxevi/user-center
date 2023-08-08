@@ -10,6 +10,7 @@ import com.pocxevi.usercenter.model.domain.User;
 * @createDate 2023-06-19 11:05:46
 * @Entity generator.domain.User
 */
+
 public interface UserMapper extends BaseMapper<User> {
 
 }

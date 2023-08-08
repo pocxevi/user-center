@@ -1,20 +1,26 @@
 spring:
   application:
     name: user-center
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 666666
-    url: jdbc:mysql://localhost:3306/pocxevi
-
+  profiles:
+    active: dev
+  session:
+    store-type: redis
+  redis:
+    database: 0
+    host: 8.140.202.170
 server:
-  port: 9091
   servlet:
     context-path: /api
+    session:
+      cookie:
+        domain: localhost
+        same-site: none # 以下两条：解决SameSite=Lax导致前端无法携带Cookie的坑
+        secure: true
 
 mybatis-plus:
   configuration:
     mapUnderscoreToCamelCase: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql语句执行日志
   global-config:
     db-config:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)

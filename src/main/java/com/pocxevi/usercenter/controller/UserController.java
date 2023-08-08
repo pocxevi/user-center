@@ -11,6 +11,7 @@ import com.pocxevi.usercenter.model.domain.request.UserRegisterRequest;
 import com.pocxevi.usercenter.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import static com.pocxevi.usercenter.constant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
+// @CrossOrigin(origins = {"http://localhost:5173"})
 public class UserController {
 
     @Autowired
@@ -97,7 +99,7 @@ public class UserController {
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        if (userObj == null) {
+         if (userObj == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         User currentUser = (User) userObj;
@@ -117,7 +119,7 @@ public class UserController {
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String username, HttpServletRequest request) {
         // 权限判断
-        if (!isAdmin(request)) {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
 
@@ -135,7 +137,7 @@ public class UserController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(long id, HttpServletRequest request) {
         // 权限判断
-        if (isAdmin(request)) {
+        if (userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
 
@@ -146,20 +148,30 @@ public class UserController {
         return ResultUtils.success(result);
     }
 
-    /**
-     * 权限判断 是否为管理员
-     *
-     * @param request
-     * @return
-     */
-    private boolean isAdmin(HttpServletRequest request) {
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);// 不能用userServiceImpl里的常量
-        User user = (User) userObj;
-//        if (user == null || user.getUserRole() != 1)  { // 为了避免出现空指针异常，先进行判空
-//            return false;
-//        }
-//        return true;
-        return user != null || user.getUserRole().equals(ADMIN_USERROLE);
-
+    // 根据标签查询用户
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+        }
+        List<User> userList = userService.queryUsersByTags(tagNameList);
+        return ResultUtils.success(userList);
     }
+
+    /**
+     * 修改用户信息
+     */
+    @PostMapping("update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
+        // 校验参数是否为空
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+
+        int result = userService.updateUser(user, loginUser);
+        return ResultUtils.success(result);
+    }
+
+
 }

@@ -4,6 +4,10 @@ import com.pocxevi.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
+import static com.pocxevi.usercenter.constant.UserConstant.ADMIN_USERROLE;
+import static com.pocxevi.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
 * @author yy187
@@ -49,4 +53,48 @@ public interface UserService extends IService<User> {
      * @return
      */
      int userLogout(HttpServletRequest request);
+
+    /**
+     * 根据标签搜索用户
+     *
+     * @param tagNameList 用户要拥有的标签
+     * @return
+     */
+    List<User> queryUserByTags(List<String> tagNameList);
+
+    /**
+     * 根据标签搜索用户（内存过滤 ）
+     *
+     * @param tagNameList 用户要拥有的标签
+     * @return
+     */
+    List<User> queryUsersByTags(List<String> tagNameList);
+
+    /**
+     *
+     * @param user
+     * @return
+     */
+    int updateUser(User user, User loginUser);
+
+    /**
+     * 获取当前登录用户信息
+     */
+    User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 权限判断 是否为管理员
+     *
+     * @param request
+     * @return
+     */
+    boolean isAdmin(HttpServletRequest request);
+
+    /**
+     * 权限判断 是否为管理员
+     *
+     * @param loginUser
+     * @return
+     */
+    boolean isAdmin(User loginUser);
 }

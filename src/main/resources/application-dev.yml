@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 666666
+    url: jdbc:mysql://localhost:3306/pocxevi
+  session:
+    timeout: 86400
+
+server:
+  port: 9091

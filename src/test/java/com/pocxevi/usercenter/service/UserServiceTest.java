@@ -1,6 +1,8 @@
 package com.pocxevi.usercenter.service;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import com.aliyuncs.utils.Base64Helper;
 import com.pocxevi.usercenter.model.domain.User;
@@ -60,12 +62,19 @@ class UserServiceTest {
 
     @Test
     void userRegister() {
-        String userAccount = "dajiba";
+        String userAccount = "jkjkk";
         String userPassword = "123456789";
         String checkPassword = "123456789";
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
 
         Assertions.assertTrue(result > 0);
 
+    }
+
+    @Test
+    void queryUserByTags() {
+        List<String> list = Arrays.asList("java", "python");
+        List<User> users = userService.queryUserByTags(list);
+        System.out.println(users);
     }
 }
