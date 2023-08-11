@@ -134,6 +134,20 @@ public class UserController {
         return ResultUtils.success(userList);
     }
 
+    /**
+     * 用户推荐
+     *
+     * @param
+     * @return
+     */
+    @GetMapping("/recommend")
+    public BaseResponse<List<User>> recommendUsers() {
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        List<User> users = userService.list(userQueryWrapper);
+        List<User> userList = users.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        return ResultUtils.success(userList);
+    }
+
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(long id, HttpServletRequest request) {
         // 权限判断
