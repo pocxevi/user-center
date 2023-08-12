@@ -1,6 +1,7 @@
 package com.pocxevi.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pocxevi.usercenter.common.BaseResponse;
 import com.pocxevi.usercenter.common.ErrorCode;
 import com.pocxevi.usercenter.common.ResultUtils;
@@ -141,11 +142,10 @@ public class UserController {
      * @return
      */
     @GetMapping("/recommend")
-    public BaseResponse<List<User>> recommendUsers() {
+    public BaseResponse<Page<User>> recommendUsers(long pageNum, long pageSize) {
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
-        List<User> users = userService.list(userQueryWrapper);
-        List<User> userList = users.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
-        return ResultUtils.success(userList);
+        Page<User> users = userService.page(new Page<>(pageNum, pageSize), userQueryWrapper);
+        return ResultUtils.success(users);
     }
 
     @PostMapping("/delete")
