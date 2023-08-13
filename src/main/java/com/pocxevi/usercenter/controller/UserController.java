@@ -10,17 +10,24 @@ import com.pocxevi.usercenter.model.domain.User;
 import com.pocxevi.usercenter.model.domain.request.UserLoginRequest;
 import com.pocxevi.usercenter.model.domain.request.UserRegisterRequest;
 import com.pocxevi.usercenter.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.pocxevi.usercenter.constant.UserConstant.ADMIN_USERROLE;
 import static com.pocxevi.usercenter.constant.UserConstant.USER_LOGIN_STATE;
+
 
 /**
  * 用户接口
@@ -29,11 +36,16 @@ import static com.pocxevi.usercenter.constant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
+@Slf4j
 // @CrossOrigin(origins = {"http://localhost:5173"})
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Resource
+    private RedisTemplate redisTemplate;
+
 
     /**
      * 用户注册
@@ -142,10 +154,28 @@ public class UserController {
      * @return
      */
     @GetMapping("/recommend")
-    public BaseResponse<Page<User>> recommendUsers(long pageNum, long pageSize) {
+    public BaseResponse<Page<User>> recommendUsers(long pageNum, long pageSize, HttpServletRequest request) {
+        
+        User loginUser = userService.getLoginUser(request);
+        String redisKey = String.format("partnerMatching:user:recommend%s", loginUser.getId());
+        
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+        if (userPage != null) {
+            return ResultUtils.success(userPage);
+        }
+
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
-        Page<User> users = userService.page(new Page<>(pageNum, pageSize), userQueryWrapper);
-        return ResultUtils.success(users);
+        userPage = userService.page(new Page<>(pageNum, pageSize), userQueryWrapper);
+
+        // 写缓存
+        try {
+            valueOperations.set(redisKey, userPage, 3000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("redis set error:", e);
+        }
+        return ResultUtils.success(userPage);
     }
 
     @PostMapping("/delete")

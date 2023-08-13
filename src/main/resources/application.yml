@@ -8,6 +8,7 @@ spring:
   redis:
     database: 0
     host: 8.140.202.170
+    port: 6379
 server:
   servlet:
     context-path: /api
